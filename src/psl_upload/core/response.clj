@@ -2,7 +2,8 @@
   "Namespace for high level functions for creating Ring responses."
   (:require [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
-            [ring.util.response :refer [response content-type]])
+            [ring.util.response :refer [response content-type]]
+            [psl-upload.io.core :refer [save-temp-file]])
   (:use [hiccup core page])
   (:import [java.io.File]))
 
@@ -27,28 +28,16 @@
    (response
     {:anti-forgery-token *anti-forgery-token*})
    (content-type-json)))
+ 
 
 (defn post-upload
-  "POST upload requests."
-  [params]
-  (do
-    (println params)
-    (comment (->
-               (response
-                (reduce #(assoc %1 %2 (params %2)) {} [:file :file_name :device_id :device_name])) 
-               
-               (content-type-json)))
-    (-> (response params) (content-type-json))))
-
-(defn post-upload
+  "The good one"
   [{:keys [file file_name device_id device_name] :as post-data}]
-  (->
-   (response (assoc post-data :file (.getPath (:tempfile file))))
-   (content-type-json)))
+  (do
+    (save-temp-file (:tempfile file) file_name device_id)
+    (comment (content-type-json (response (str post-data))))
+    (content-type-json (response {device_id file_name}))))
 
-(defn post-upload
-  [file]
-  (content-type-json (response {:thefile (.getPath (:tempfile file))})))
 
 (defn text-input
   "Creates a form text input field named `name`."
