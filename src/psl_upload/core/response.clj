@@ -32,11 +32,12 @@
 
 (defn post-upload
   "The good one"
-  [{:keys [file file_name device_id device_name] :as post-data}]
-  (do
-    (save-temp-file (:tempfile file) file_name device_id)
-    (comment (content-type-json (response (str post-data))))
-    (content-type-json (response {device_id file_name}))))
+  [{:keys [file device_id device_name] :as post-data}]
+  (->>
+   (save-temp-file (:tempfile file) device_name device_id)
+   (hash-map :device_id device_id :file_name)
+   (response)
+   (content-type-json)))
 
 
 (defn text-input
